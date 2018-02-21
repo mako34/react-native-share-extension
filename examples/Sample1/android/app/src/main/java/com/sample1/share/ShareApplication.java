@@ -3,7 +3,8 @@ package com.sample1.share;
 // import your build config
 import com.sample1.BuildConfig;
 
-import com.alinz.parkerdan.shareextension.SharePackage;
+//import com.alinz.parkerdan.shareextension.SharePackage;
+
 
 import android.app.Application;
 

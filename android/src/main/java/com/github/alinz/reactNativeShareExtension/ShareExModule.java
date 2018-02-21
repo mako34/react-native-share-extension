@@ -30,6 +30,7 @@ public class ShareExModule extends ReactContextBaseJavaModule implements Activit
     }
 
     protected WritableMap processIntent() {
+        Log.d("mk", "saleu");
 
         Activity currentActivity = getCurrentActivity();
 
@@ -52,6 +53,8 @@ public class ShareExModule extends ReactContextBaseJavaModule implements Activit
 
         map.putString("type", type);
         map.putString("value", value);
+        map.putString("origin", "android_extension");
+
 
         return map;
     }
