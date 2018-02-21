@@ -68,9 +68,14 @@ public class ShareModule extends ReactContextBaseJavaModule {
         type = "";
       }
 
+      String origin = "JS";
+      if (type.length()>0){
+          origin = "android_extension";
+      }
+
       map.putString("type", type);
       map.putString("value",value);
-      map.putString("origin","real_G");
+      map.putString("origin",origin);
 
       return map;
   }
