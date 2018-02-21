@@ -70,6 +70,7 @@ public class ShareModule extends ReactContextBaseJavaModule {
 
       map.putString("type", type);
       map.putString("value",value);
+      map.putString("origin","real_G");
 
       return map;
   }
