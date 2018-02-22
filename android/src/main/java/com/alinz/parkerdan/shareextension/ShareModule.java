@@ -12,6 +12,8 @@ import android.content.Intent;
 import android.net.Uri;
 
 import android.graphics.Bitmap;
+import android.util.Log;
+
 import java.io.InputStream;
 
 
@@ -53,16 +55,27 @@ public class ShareModule extends ReactContextBaseJavaModule {
         if (type == null) {
           type = "";
         }
+
+
         if (Intent.ACTION_SEND.equals(action) && "text/plain".equals(type)) {
-          value = intent.getStringExtra(Intent.EXTRA_TEXT);
+
+            value = intent.getStringExtra(Intent.EXTRA_TEXT);
         }
-        else if (Intent.ACTION_SEND.equals(action) && ("image/*".equals(type) || "image/jpeg".equals(type) || "image/png".equals(type) || "image/jpg".equals(type) ) ) {
-          Uri uri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
-         value = "file://" + RealPathUtil.getRealPathFromURI(currentActivity, uri);
+
+//        else if (Intent.ACTION_SEND.equals(action) && ("image/*".equals(type) || "image/jpeg".equals(type) || "image/png".equals(type) || "image/jpg".equals(type) ) ) {
+
+
+        else if (Intent.ACTION_SEND.equals(action)   ) {
+
+            Uri uri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+            value = "file://" + RealPathUtil.getRealPathFromURI(currentActivity, uri);
 
        } else {
          value = "";
        }
+
+
+
       } else {
         value = "";
         type = "";
