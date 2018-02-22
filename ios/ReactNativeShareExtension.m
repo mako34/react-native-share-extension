@@ -2,9 +2,8 @@
 #import "React/RCTRootView.h"
 #import <MobileCoreServices/MobileCoreServices.h>
 
-#define URL_IDENTIFIER @"public.url"
-#define IMAGE_IDENTIFIER @"public.image"
-#define TEXT_IDENTIFIER (NSString *)kUTTypePlainText
+#define ITEM_IDENTIFIER (NSString *)kUTTypeItem
+#define CONTENT_IDENTIFIER (NSString *)kUTTypeContent
 
 NSExtensionContext* extensionContext;
 
@@ -34,8 +33,8 @@ RCT_EXPORT_MODULE();
     if (rootView.backgroundColor == nil) {
         rootView.backgroundColor = [[UIColor alloc] initWithRed:1 green:1 blue:1 alpha:0.1];
     }
-    
-    
+
+
     self.view = rootView;
 }
 
@@ -52,76 +51,53 @@ RCT_REMAP_METHOD(data,
                  resolver:(RCTPromiseResolveBlock)resolve
                  rejecter:(RCTPromiseRejectBlock)reject)
 {
-    [self extractDataFromContext: extensionContext withCallback:^(NSString* val, NSString* contentType, NSException* err) {
-        if(err) {
-            reject(@"error", err.description, nil);
-        } else {
-            resolve(@{
-                      @"type": contentType,
-                      @"value": val,
-                      @"origin": @"iOS_extension"
-                      });
-        }
-    }];
+    if (extensionContext != nil) {
+        [self extractDataFromContext: extensionContext withCallback:^(NSString* val, NSString* contentType, NSException* err) {
+            if(err) {
+                reject(@"error", err.description, nil);
+            } else {
+                resolve(@{
+                          @"type": contentType,
+                          @"value": val,
+                          @"origin": @"iOS_extension"
+                          });
+            }
+        }];
+    } else {
+        resolve(@{
+                  @"type": @"",
+                  @"value": @"",
+                  @"origin": @"JS",
+                  });
+    }
 }
 
 - (void)extractDataFromContext:(NSExtensionContext *)context withCallback:(void(^)(NSString *value, NSString* contentType, NSException *exception))callback {
     @try {
-        
-        NSLog(@"context :: %@", context);
-
-        
         NSExtensionItem *item = [context.inputItems firstObject];
         NSArray *attachments = item.attachments;
+        __block NSItemProvider *objProvider = nil;
+        __block NSString *objIdentifier = nil;
 
-        __block NSItemProvider *urlProvider = nil;
-        __block NSItemProvider *imageProvider = nil;
-        __block NSItemProvider *textProvider = nil;
 
         [attachments enumerateObjectsUsingBlock:^(NSItemProvider *provider, NSUInteger idx, BOOL *stop) {
-            
-            NSLog(@"idx :: %lu", idx);
-            
-            if([provider hasItemConformingToTypeIdentifier:URL_IDENTIFIER]) {
-                urlProvider = provider;
+            objProvider = provider;
+            if ([provider hasItemConformingToTypeIdentifier:ITEM_IDENTIFIER]) {
+                objIdentifier = ITEM_IDENTIFIER;
                 *stop = YES;
-            } else if ([provider hasItemConformingToTypeIdentifier:TEXT_IDENTIFIER]){
-                textProvider = provider;
-                *stop = YES;
-            } else if ([provider hasItemConformingToTypeIdentifier:IMAGE_IDENTIFIER]){
-                imageProvider = provider;
+            } else if ([provider hasItemConformingToTypeIdentifier:CONTENT_IDENTIFIER]) {
+                objIdentifier = CONTENT_IDENTIFIER;
                 *stop = YES;
             }
         }];
 
-        if(urlProvider) {
-            [urlProvider loadItemForTypeIdentifier:URL_IDENTIFIER options:nil completionHandler:^(id<NSSecureCoding> item, NSError *error) {
+        if (objProvider != nil && objIdentifier != nil) {
+            [objProvider loadItemForTypeIdentifier:objIdentifier options:nil completionHandler:^(id<NSSecureCoding>  _Nullable item, NSError * _Null_unspecified error) {
                 NSURL *url = (NSURL *)item;
-
-                if(callback) {
-                    callback([url absoluteString], @"text/plain", nil);
-                }
-            }];
-        } else if (imageProvider) {
-            [imageProvider loadItemForTypeIdentifier:IMAGE_IDENTIFIER options:nil completionHandler:^(id<NSSecureCoding> item, NSError *error) {
-                NSURL *url = (NSURL *)item;
-
-                if(callback) {
-                    callback([url absoluteString], [[[url absoluteString] pathExtension] lowercaseString], nil);
-                }
-            }];
-        } else if (textProvider) {
-            [textProvider loadItemForTypeIdentifier:TEXT_IDENTIFIER options:nil completionHandler:^(id<NSSecureCoding> item, NSError *error) {
-                NSString *text = (NSString *)item;
-
-                if(callback) {
-                    callback(text, @"text/plain", nil);
-                }
+                callback([url absoluteString], objIdentifier, nil);
             }];
         } else {
-            if(callback) {
-                callback(nil, nil, [NSException exceptionWithName:@"Error" reason:@"couldn't find provider" userInfo:nil]);
-            }
+            callback(@"", @"", nil);
         }
     }
     @catch (NSException *exception) {
