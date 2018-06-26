@@ -125,7 +125,7 @@ RCT_REMAP_METHOD(data,
                 //                        NSLog(@" file doesnt exist");
                 //                    }
                 
-                callback([[url URLByResolvingSymlinksInPath] absoluteString], objIdentifier, nil);
+                callback([[url URLByResolvingSymlinksInPath] path], objIdentifier, nil);
             }];
         } else {
             callback(@"", @"", nil);
