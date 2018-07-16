@@ -9,87 +9,67 @@ import com.facebook.react.bridge.Arguments;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.net.Uri;
-
-import android.graphics.Bitmap;
-import android.util.Log;
-
-import java.io.InputStream;
-
 
 public class ShareModule extends ReactContextBaseJavaModule {
+    public ShareModule(ReactApplicationContext reactContext) {
+        super(reactContext);
+    }
 
+    @Override
+    public String getName() {
+        return "ReactNativeShareExtension";
+    }
 
-  public ShareModule(ReactApplicationContext reactContext) {
-      super(reactContext);
-  }
+    @ReactMethod
+    public void close() {
+        getCurrentActivity().finish();
+    }
 
-  @Override
-  public String getName() {
-      return "ReactNativeShareExtension";
-  }
+    @ReactMethod
+    public void data(Promise promise) {
+        promise.resolve(processIntent());
+    }
 
-  @ReactMethod
-  public void close() {
-    getCurrentActivity().finish();
-  }
+    public WritableMap processIntent() {
+        WritableMap map = Arguments.createMap();
 
-  @ReactMethod
-  public void data(Promise promise) {
-      promise.resolve(processIntent());
-  }
+        String value = "";
+        String type = "";
+        String action = "";
 
-  public WritableMap processIntent() {
-      WritableMap map = Arguments.createMap();
+        Activity currentActivity = getCurrentActivity();
 
-      String value = "";
-      String type = "";
-      String action = "";
+        if (currentActivity != null) {
+            Intent intent = currentActivity.getIntent();
+            action = intent.getAction();
+            type = intent.getType();
 
-      Activity currentActivity = getCurrentActivity();
+            if (type == null) {
+                type = "";
+            }
 
-      if (currentActivity != null) {
-        Intent intent = currentActivity.getIntent();
-        action = intent.getAction();
-        type = intent.getType();
-        if (type == null) {
-          type = "";
+            if (Intent.ACTION_SEND.equals(action) && "text/plain".equals(type)) {
+                value = intent.getStringExtra(Intent.EXTRA_TEXT);
+            } else if (Intent.ACTION_SEND.equals(action)) {
+                Uri uri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                value = "file://" + RealPathUtil.getRealPathFromURI(currentActivity, uri);
+            } else {
+                value = "";
+            }
+        } else {
+            value = "";
+            type = "";
         }
 
-
-        if (Intent.ACTION_SEND.equals(action) && "text/plain".equals(type)) {
-
-            value = intent.getStringExtra(Intent.EXTRA_TEXT);
+        String origin = "JS";
+        if (type.length() > 0) {
+            origin = "android_extension";
         }
 
-//        else if (Intent.ACTION_SEND.equals(action) && ("image/*".equals(type) || "image/jpeg".equals(type) || "image/png".equals(type) || "image/jpg".equals(type) ) ) {
+        map.putString("type", type);
+        map.putString("value", value);
+        map.putString("origin", origin);
 
-
-        else if (Intent.ACTION_SEND.equals(action)   ) {
-
-            Uri uri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
-            value = "file://" + RealPathUtil.getRealPathFromURI(currentActivity, uri);
-
-       } else {
-         value = "";
-       }
-
-
-
-      } else {
-        value = "";
-        type = "";
-      }
-
-      String origin = "JS";
-      if (type.length()>0){
-          origin = "android_extension";
-      }
-
-      map.putString("type", type);
-      map.putString("value",value);
-      map.putString("origin",origin);
-
-      return map;
-  }
+        return map;
+    }
 }
