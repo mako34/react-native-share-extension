@@ -9,6 +9,7 @@ import com.facebook.react.bridge.Arguments;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 
 public class ShareModule extends ReactContextBaseJavaModule {
     public ShareModule(ReactApplicationContext reactContext) {
